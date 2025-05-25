@@ -20,9 +20,9 @@ pipeline {
                         source test_env/bin/activate
                         pip install flake8
                         echo "Running flake8 linting on Python files..."
-                        python3 -m flake8 app.py test_app.py --max-line-length=88 --ignore=E203,W503 || true
+                        flake8 app.py test_app.py --max-line-length=88 --ignore=E203,W503 || true
                         echo "Linting selenium test files..."
-                        python3 -m flake8 selenium_tests/test_selenium.py --max-line-length=88 --ignore=E203,W503 || true
+                        flake8 selenium_tests/test_selenium.py --max-line-length=88 --ignore=E203,W503 || true
                     '''
                 }
                 echo 'Code Linting Stage Completed!'
