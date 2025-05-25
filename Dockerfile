@@ -23,7 +23,9 @@ RUN pip install --no-cache-dir \
     Flask-SQLAlchemy==3.0.5 \
     Flask-Migrate==4.0.5 \
     PyMySQL==1.1.0 \
-    cryptography==41.0.4
+    cryptography==41.0.4 \
+    flake8==7.2.0 \
+    coverage==7.8.2
 
 # Copy application files
 COPY app.py .
