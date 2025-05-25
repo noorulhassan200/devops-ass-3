@@ -73,9 +73,6 @@ pipeline {
                 echo 'Starting Unit Testing Stage...'
                 script {
                     sh '''
-                        echo "Installing system dependencies for testing..."
-                        sudo apt-get install -y python3-venv || true
-                        
                         echo "Setting up Python virtual environment for unit tests..."
                         python3 -m venv test_env || python3 -m virtualenv test_env || virtualenv test_env
                         
