@@ -2,6 +2,10 @@ import unittest
 import json
 import os
 import tempfile
+
+# Set environment variable to force SQLite before importing app
+os.environ['FORCE_SQLITE_TESTING'] = 'true'
+
 from app import app, db, Task
 
 
@@ -9,23 +13,29 @@ class TaskManagerTestCase(unittest.TestCase):
     
     def setUp(self):
         """Set up test database and client"""
-        self.db_fd, app.config['DATABASE_URL'] = tempfile.mkstemp()
+        # Force SQLite for testing
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         
-        self.app = app.test_client()
+        # Create new app context
         self.app_context = app.app_context()
         self.app_context.push()
         
-        db.create_all()
+        # Create test client
+        self.app = app.test_client()
+        
+        # Recreate all tables in the test database
+        with app.app_context():
+            db.drop_all()
+            db.create_all()
     
     def tearDown(self):
         """Clean up after tests"""
-        db.session.remove()
-        db.drop_all()
+        with app.app_context():
+            db.session.remove()
+            db.drop_all()
         self.app_context.pop()
-        os.close(self.db_fd)
     
     def test_index_page(self):
         """Test the main index page loads correctly"""

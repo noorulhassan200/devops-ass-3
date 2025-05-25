@@ -9,12 +9,16 @@ app = Flask(__name__)
 # Database configuration with fallback to SQLite for local development
 def get_database_uri():
     """Get database URI with fallback to SQLite for local development"""
+    # Check if we're in testing mode
+    if os.environ.get('FORCE_SQLITE_TESTING') == 'true':
+        return 'sqlite:///:memory:'
+    
+    # Check for explicit database URL
     database_url = os.environ.get('DATABASE_URL')
     if database_url:
         return database_url
     
     # Try MySQL first, fallback to SQLite
-    mysql_uri = 'mysql+pymysql://root:password@localhost:3306/taskdb'
     try:
         # Test MySQL connection
         import pymysql
@@ -23,11 +27,13 @@ def get_database_uri():
             port=3306,
             user='root',
             password='password',
-            database='taskdb'
+            database='taskdb',
+            connect_timeout=3
         )
         connection.close()
-        return mysql_uri
-    except:
+        return 'mysql+pymysql://root:password@localhost:3306/taskdb'
+    except Exception as e:
+        print(f"MySQL connection failed ({e}), falling back to SQLite")
         # Fallback to SQLite for local development
         return 'sqlite:///tasks.db'
 

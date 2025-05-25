@@ -82,11 +82,15 @@ pipeline {
                         pip install --upgrade pip
                         pip install Flask==2.3.3 Flask-SQLAlchemy==3.0.5 Flask-Migrate==4.0.5 PyMySQL==1.1.0 cryptography==41.0.4
                         
-                        echo "Running unit tests..."
+                        echo "Setting environment for testing..."
+                        export FORCE_SQLITE_TESTING=true
+                        
+                        echo "Running unit tests with SQLite..."
                         python -m unittest test_app.py -v
                         
                         echo "Generating test coverage report..."
                         pip install coverage
+                        export FORCE_SQLITE_TESTING=true
                         coverage run -m unittest test_app.py
                         coverage report
                         coverage html -d coverage_html_report || echo "Coverage HTML report generation failed"
