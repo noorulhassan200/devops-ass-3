@@ -6,9 +6,32 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 
-    'mysql+pymysql://root:password@localhost:3306/taskdb')
+# Database configuration with fallback to SQLite for local development
+def get_database_uri():
+    """Get database URI with fallback to SQLite for local development"""
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        return database_url
+    
+    # Try MySQL first, fallback to SQLite
+    mysql_uri = 'mysql+pymysql://root:password@localhost:3306/taskdb'
+    try:
+        # Test MySQL connection
+        import pymysql
+        connection = pymysql.connect(
+            host='localhost',
+            port=3306,
+            user='root',
+            password='password',
+            database='taskdb'
+        )
+        connection.close()
+        return mysql_uri
+    except:
+        # Fallback to SQLite for local development
+        return 'sqlite:///tasks.db'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = get_database_uri()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 
@@ -96,4 +119,18 @@ def create_task_api():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # Add sample data if running with SQLite
+        if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
+            if Task.query.count() == 0:
+                sample_tasks = [
+                    Task(title='Welcome Task', description='This is a sample task to get you started!'),
+                    Task(title='Learn Docker', description='Master containerization with Docker'),
+                    Task(title='Setup CI/CD', description='Configure Jenkins pipeline for automated deployment', completed=True)
+                ]
+                for task in sample_tasks:
+                    db.session.add(task)
+                db.session.commit()
+                print("Sample data added to SQLite database")
+    
+    print(f"Using database: {app.config['SQLALCHEMY_DATABASE_URI']}")
     app.run(host='0.0.0.0', port=5000, debug=True) 
