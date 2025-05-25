@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: taskdb
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: taskdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+    networks:
+      - app-network
+
+  web:
+    build: .
+    container_name: flask-app
+    environment:
+      DATABASE_URL: mysql+pymysql://root:password@mysql:3306/taskdb
+      FLASK_ENV: production
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  selenium-tests:
+    build: 
+      context: ./selenium_tests
+      dockerfile: Dockerfile
+    container_name: selenium-tests
+    environment:
+      BASE_URL: http://web:5000
+    depends_on:
+      - web
+    volumes:
+      - ./test_results:/app/test_results
+    networks:
+      - app-network
+    profiles:
+      - testing
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge 
