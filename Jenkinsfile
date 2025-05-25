@@ -16,7 +16,9 @@ pipeline {
                 script {
                     // Install flake8 and run linting
                     sh '''
-                        python3 -m pip install --user flake8
+                        python3 -m venv test_env
+                        source test_env/bin/activate
+                        pip install flake8
                         echo "Running flake8 linting on Python files..."
                         python3 -m flake8 app.py test_app.py --max-line-length=88 --ignore=E203,W503 || true
                         echo "Linting selenium test files..."
